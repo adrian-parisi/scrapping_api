@@ -68,8 +68,4 @@ def get_current_owner_id(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Update last used timestamp
-    api_key.update_last_used()
-    db.commit()
-    
     return api_key.owner_id

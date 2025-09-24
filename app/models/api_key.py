@@ -2,18 +2,18 @@
 API key database model.
 """
 
-from datetime import datetime
-from typing import Dict
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, DateTime, String, Text
+from sqlalchemy import Column, DateTime, String, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
+from sqlalchemy.orm import relationship
 
 from app.db import Base
 
 
 class APIKey(Base):
-    """API key database model."""
+    """API key for ZenRows API authentication."""
     
     __tablename__ = "api_keys"
     
@@ -21,28 +21,18 @@ class APIKey(Base):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     
     # Owner scoping
-    owner_id = Column(PostgresUUID(as_uuid=True), nullable=False, index=True)
+    owner_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     
     # Hashed API key
     key_hash = Column(Text, nullable=False, unique=True)
     
     # Timestamps
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    last_used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    owner = relationship("User", back_populates="api_keys")
     
     def __repr__(self) -> str:
         """String representation of the model."""
         return f"<APIKey(id={self.id}, owner_id={self.owner_id})>"
     
-    def update_last_used(self) -> None:
-        """Update the last used timestamp."""
-        self.last_used_at = datetime.utcnow()
-    
-    def to_dict(self) -> Dict:
-        """Convert model to dictionary."""
-        return {
-            "id": str(self.id),
-            "owner_id": str(self.owner_id),
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "last_used_at": self.last_used_at.isoformat() if self.last_used_at else None,
-        }

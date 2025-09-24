@@ -16,15 +16,19 @@
     - [x] `device_profile.py` - Device profile SQLAlchemy model
     - [x] `template.py` - Template SQLAlchemy model
     - [x] `api_key.py` - API key SQLAlchemy model
+    - [ ] `user.py` - User SQLAlchemy model
   - [x] `app/schemas/` directory with:
     - [x] `device_profile.py` - Pydantic schemas for device profiles
     - [x] `template.py` - Pydantic schemas for templates
   - [x] `app/repositories/` directory with:
     - [x] `device_profile.py` - Device profile repository
     - [x] `template.py` - Template repository
+    - [ ] `user.py` - User repository
   - [x] `app/routers/` directory with:
     - [x] `device_profiles.py` - Device profile API endpoints
     - [x] `templates.py` - Template API endpoints
+  - [ ] `scripts/` directory with:
+    - [ ] `create_user.py` - Command-line script for user creation
   - [x] `app/middleware/` directory with:
     - [x] `request_id.py` - Request ID middleware for correlation tracking
     - [x] `request_size.py` - Request size limiting middleware
@@ -73,23 +77,32 @@
   - [ ] `version` (TEXT NULL)
   - [ ] `created_at`, `updated_at` (timestamptz)
 
-### 2.3 API Key Model
+### 2.3 User Model
+- [ ] Create `app/models/user.py`
+  - [ ] `id` (UUID PK)
+  - [ ] `email` (VARCHAR(255) UNIQUE NOT NULL)
+  - [ ] `name` (VARCHAR(255) NOT NULL)
+  - [ ] `is_active` (BOOLEAN, default TRUE)
+  - [ ] `created_at`, `updated_at` (timestamptz)
+
+### 2.4 API Key Model
 - [ ] Create `app/models/api_key.py`
   - [ ] `id` (UUID PK)
-  - [ ] `owner_id` (UUID NOT NULL)
+  - [ ] `owner_id` (UUID NOT NULL, FK to users)
   - [ ] `key_hash` (TEXT UNIQUE NOT NULL)
   - [ ] `created_at`, `last_used_at`
 
-### 2.4 Database Indexes
+### 2.5 Database Indexes
 - [ ] Create unique partial index: `(owner_id, lower(name)) WHERE deleted_at IS NULL`
 - [ ] Create performance index: `(owner_id, updated_at DESC)`
+- [ ] Create unique index on users.email
 
-### 2.5 Alembic Migrations
+### 2.6 Alembic Migrations
 - [ ] Generate initial migration: `alembic revision --autogenerate -m "Initial migration"`
 - [ ] Create seed migration with templates:
   - [ ] "Chrome on Windows desktop"
   - [ ] "iOS 17 on iPhone Pro"
-  - [ ] Test API key for local development
+  - [ ] Test user and API key for local development
 - [ ] Apply migrations: `alembic upgrade head`
 
 ## Phase 3: Authentication & Authorization
@@ -146,6 +159,22 @@
   - [ ] `get_by_id(template_id)` - Get template by ID
   - [ ] `create_profile_from_template(owner_id, template_id, overrides)` - Clone template
 
+### 5.3 User Repository
+- [ ] Create `app/repositories/user.py`
+  - [ ] `create(email, name)` - Create new user
+  - [ ] `get_by_email(email)` - Get user by email
+  - [ ] `get_by_id(user_id)` - Get user by ID
+  - [ ] `create_api_key(user_id)` - Generate API key for user
+  - [ ] `get_api_keys(user_id)` - List user's API keys
+
+### 5.4 User Management Script
+- [x] Create `scripts/create_user.py`
+  - [x] Command-line interface: `python scripts/create_user.py <email>`
+  - [x] Create user if not exists
+  - [x] Generate and return API key
+  - [x] Handle duplicate email errors
+  - [x] Print API key to stdout for easy copying
+
 ## Phase 6: Pydantic Schemas
 
 ### 6.1 Device Profile Schemas
@@ -161,6 +190,7 @@
   - [ ] `TemplateList` - For template list responses
   - [ ] `CreateProfileFromTemplate` - For template clone requests
 
+
 ## Phase 7: API Endpoints
 
 ### 7.1 Device Profile Endpoints
@@ -172,16 +202,20 @@
   - [ ] `DELETE /api/v1/device-profiles/{id}` - Soft delete profile
 
 ### 7.2 Template Endpoints
-- [ ] Create `app/routers/templates.py`
-  - [ ] `GET /api/v1/templates` - List templates
-  - [ ] `GET /api/v1/templates/{id}` - Get template
-  - [ ] `POST /api/v1/templates/{id}/create-profile` - Create profile from template
+- [x] Create `app/routers/templates.py`
+  - [x] `GET /api/v1/templates` - List templates
+  - [x] `GET /api/v1/templates/{id}` - Get template
+  - [x] `POST /api/v1/templates/{id}/create-profile` - Create profile from template
 
-### 7.3 Health Check Endpoint
-- [ ] Create `app/routers/health.py`
-  - [ ] `GET /health` - Health check endpoint
-  - [ ] Return 200 OK with service status
-  - [ ] Include database connectivity check
+### 7.3 User Management Script (Technical Interview Only)
+- [ ] Create `scripts/create_user.py` - Command-line script for user creation
+  - [ ] Accept email as command-line argument
+  - [ ] Create user with email and generated name
+  - [ ] Generate API key for the user
+  - [ ] Return API key as command output
+  - [ ] **WARNING**: This script is for technical interview purposes only
+  - [ ] **WARNING**: No authentication required - NOT suitable for production
+
 
 ## Phase 8: Error Handling & Response Format
 
@@ -314,6 +348,10 @@
   - Migration scripts for template updates
 
 ### Low Priority
+- [ ] Add health check endpoint
+  - `GET /health` - Health check endpoint
+  - Return 200 OK with service status
+  - Include database connectivity check
 - [ ] Add HATEOAS support
   - Include `_links` object in all responses
   - Add self-links for all resources

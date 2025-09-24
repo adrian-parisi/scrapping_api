@@ -2,11 +2,11 @@
 Device profile database model.
 """
 
-from datetime import datetime
-from typing import Dict, List, Optional
+from datetime import datetime, timezone
+from typing import List, Optional
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, DateTime, Enum, Integer, String, Text, Boolean, JSON
+from sqlalchemy import Column, DateTime, Enum, Integer, String, Text, Boolean, JSON, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
 
@@ -20,7 +20,7 @@ class DeviceType(str, Enum):
 
 
 class DeviceProfile(Base):
-    """Device profile database model."""
+    """Device profile configuration for web scraping requests."""
     
     __tablename__ = "profiles"
     
@@ -28,7 +28,7 @@ class DeviceProfile(Base):
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     
     # Owner scoping
-    owner_id = Column(PostgresUUID(as_uuid=True), nullable=False, index=True)
+    owner_id = Column(PostgresUUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     
     # Profile details
     name = Column(Text, nullable=False)
@@ -48,11 +48,14 @@ class DeviceProfile(Base):
     version = Column(Integer, nullable=False, default=1)
     
     # Timestamps
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Soft delete
     deleted_at = Column(DateTime, nullable=True)
+    
+    # Relationships
+    owner = relationship("User", back_populates="device_profiles")
     
     def __repr__(self) -> str:
         """String representation of the model."""
@@ -64,29 +67,11 @@ class DeviceProfile(Base):
     
     def soft_delete(self) -> None:
         """Soft delete the profile."""
-        self.deleted_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
+        self.deleted_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(timezone.utc)
     
     def increment_version(self) -> None:
         """Increment the version number."""
         self.version += 1
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
     
-    def to_dict(self) -> Dict:
-        """Convert model to dictionary."""
-        return {
-            "id": str(self.id),
-            "owner_id": str(self.owner_id),
-            "name": self.name,
-            "device_type": self.device_type.value,
-            "window_width": self.window_width,
-            "window_height": self.window_height,
-            "user_agent": self.user_agent,
-            "country": self.country,
-            "custom_headers": self.custom_headers,
-            "extras": self.extras,
-            "version": self.version,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-            "deleted_at": self.deleted_at.isoformat() if self.deleted_at else None,
-        }

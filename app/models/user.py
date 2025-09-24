@@ -1,39 +1,40 @@
 """
-Template database model.
+User database model.
 """
 
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, DateTime, String, Text, JSON
+from sqlalchemy import Column, DateTime, String, Boolean
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
+from sqlalchemy.orm import relationship
 
 from app.db import Base
 
 
-class Template(Base):
-    """Predefined device profile templates."""
+class User(Base):
+    """User account for API authentication."""
     
-    __tablename__ = "templates"
+    __tablename__ = "users"
     
     # Primary key
     id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     
-    # Template details
-    name = Column(Text, nullable=False, unique=True)
-    description = Column(Text, nullable=True)
+    # User details
+    email = Column(String(255), nullable=False, unique=True, index=True)
     
-    # Template data as full profile-like payload snapshot
-    data = Column(JSON, nullable=False)
-    
-    # Template version (e.g., "Chrome 120", "iOS 17")
-    version = Column(String(50), nullable=True)
+    # Account status
+    is_active = Column(Boolean, nullable=False, default=True)
     
     # Timestamps
     created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
+    # Relationships
+    device_profiles = relationship("DeviceProfile", back_populates="owner")
+    api_keys = relationship("APIKey", back_populates="owner")
+    
     def __repr__(self) -> str:
         """String representation of the model."""
-        return f"<Template(id={self.id}, name={self.name}, version={self.version})>"
+        return f"<User(id={self.id}, email={self.email})>"
     

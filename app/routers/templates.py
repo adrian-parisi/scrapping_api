@@ -5,57 +5,38 @@ Template API endpoints.
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_owner_id
-from app.core.pagination import PaginationParams, create_link_header, get_pagination_params, paginate_results
 from app.db import get_db
 from app.repositories.device_profile import DeviceProfileRepository
 from app.repositories.template import TemplateRepository
 from app.schemas.device_profile import DeviceProfileCreate, DeviceProfileResponse
-from app.schemas.template import CreateProfileFromTemplateRequest, TemplateList, TemplateResponse
+from app.schemas.template import CreateProfileFromTemplateRequest, TemplateResponse
 
 router = APIRouter()
 
 
-@router.get("/templates", response_model=TemplateList)
+@router.get("/templates", response_model=Page[TemplateResponse])
 async def list_templates(
-    request: Request,
-    pagination: PaginationParams = Depends(get_pagination_params),
+    params: Params = Depends(),
     db: Session = Depends(get_db)
 ):
     """List all templates."""
     repository = TemplateRepository(db)
-    templates = repository.list()
     
-    # Convert to response models
-    template_responses = [TemplateResponse.model_validate(template) for template in templates]
+    # Get the base query from repository
+    query = repository.get_query()
     
-    # Create paginated response
-    paginated_templates, metadata = paginate_results(
-        template_responses, pagination.limit, pagination.offset, len(templates)
+    # Use fastapi-pagination to handle pagination automatically
+    return paginate(
+        query,
+        params,
+        transformer=lambda items: [TemplateResponse.model_validate(item) for item in items]
     )
-    
-    # Create Link header
-    link_header = create_link_header(
-        str(request.url).split('?')[0],  # Base URL without query params
-        pagination.limit,
-        pagination.offset,
-        len(templates)
-    )
-    
-    response_data = {
-        "items": paginated_templates,
-        **metadata
-    }
-    
-    response = JSONResponse(content=response_data)
-    if link_header:
-        response.headers["Link"] = link_header
-    
-    return response
 
 
 @router.get("/templates/{template_id}", response_model=TemplateResponse)

@@ -6,7 +6,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from sqlalchemy import and_, func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, Query
 
 from app.models.device_profile import DeviceProfile
 from app.schemas.device_profile import DeviceProfileCreate, DeviceProfileUpdate
@@ -18,6 +18,23 @@ class DeviceProfileRepository:
     def __init__(self, db: Session):
         """Initialize repository with database session."""
         self.db = db
+    
+    def get_query(self, owner_id: UUID) -> Query:
+        """
+        Get base query for device profiles filtered by owner.
+        
+        Args:
+            owner_id: Owner ID to filter by
+            
+        Returns:
+            Query: SQLAlchemy query object
+        """
+        return self.db.query(DeviceProfile).filter(
+            and_(
+                DeviceProfile.owner_id == owner_id,
+                DeviceProfile.deleted_at.is_(None)  # Only active profiles
+            )
+        ).order_by(DeviceProfile.created_at.desc())
     
     def create(self, owner_id: UUID, profile_data: DeviceProfileCreate) -> DeviceProfile:
         """

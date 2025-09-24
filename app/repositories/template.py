@@ -5,7 +5,7 @@ Template repository for data access operations.
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, Query
 
 from app.models.template import Template
 from app.schemas.device_profile import DeviceProfileCreateFromTemplate
@@ -18,6 +18,15 @@ class TemplateRepository:
     def __init__(self, db: Session):
         """Initialize repository with database session."""
         self.db = db
+    
+    def get_query(self) -> Query:
+        """
+        Get base query for templates.
+        
+        Returns:
+            Query: SQLAlchemy query object
+        """
+        return self.db.query(Template).order_by(Template.name)
     
     def list(self) -> List[Template]:
         """

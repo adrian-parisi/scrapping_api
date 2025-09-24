@@ -5,17 +5,17 @@ Device profile API endpoints.
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import JSONResponse
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_owner_id
-from app.core.pagination import PaginationParams, create_link_header, get_pagination_params, paginate_results
 from app.db import get_db
 from app.repositories.device_profile import DeviceProfileRepository
 from app.schemas.device_profile import (
     DeviceProfileCreate,
-    DeviceProfileList,
     DeviceProfileResponse,
     DeviceProfileUpdate
 )
@@ -23,43 +23,24 @@ from app.schemas.device_profile import (
 router = APIRouter()
 
 
-@router.get("/device-profiles", response_model=DeviceProfileList)
+@router.get("/device-profiles", response_model=Page[DeviceProfileResponse])
 async def list_device_profiles(
-    request: Request,
-    pagination: PaginationParams = Depends(get_pagination_params),
+    params: Params = Depends(),
     owner_id: UUID = Depends(get_current_owner_id),
     db: Session = Depends(get_db)
 ):
     """List device profiles for the authenticated owner."""
     repository = DeviceProfileRepository(db)
-    profiles, total_count = repository.list(owner_id, pagination.limit, pagination.offset)
     
-    # Convert to response models
-    profile_responses = [DeviceProfileResponse.model_validate(profile) for profile in profiles]
+    # Get the base query from repository
+    query = repository.get_query(owner_id)
     
-    # Create paginated response
-    paginated_profiles, metadata = paginate_results(
-        profile_responses, pagination.limit, pagination.offset, total_count
+    # Use fastapi-pagination to handle pagination automatically
+    return paginate(
+        query,
+        params,
+        transformer=lambda items: [DeviceProfileResponse.model_validate(item) for item in items]
     )
-    
-    # Create Link header
-    link_header = create_link_header(
-        str(request.url).split('?')[0],  # Base URL without query params
-        pagination.limit,
-        pagination.offset,
-        total_count
-    )
-    
-    response_data = {
-        "items": paginated_profiles,
-        **metadata
-    }
-    
-    response = JSONResponse(content=response_data)
-    if link_header:
-        response.headers["Link"] = link_header
-    
-    return response
 
 
 @router.post("/device-profiles", response_model=DeviceProfileResponse, status_code=status.HTTP_201_CREATED)
