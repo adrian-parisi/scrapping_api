@@ -15,8 +15,8 @@ from app.db import get_db
 from app.models.api_key import APIKey
 from app.settings import settings
 
-# HTTP Bearer security scheme
-security = HTTPBearer()
+# HTTP Bearer security scheme with custom 401 response
+security = HTTPBearer(auto_error=False)
 
 
 def hash_api_key(api_key: str) -> str:

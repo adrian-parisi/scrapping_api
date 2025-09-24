@@ -53,49 +53,48 @@
 ## Phase 2: Database Models & Migrations
 
 ### 2.1 Device Profile Model
-- [ ] Create `app/models/device_profile.py`
-  - [ ] `id` (UUID PK)
-  - [ ] `owner_id` (UUID, NOT NULL)
-  - [ ] `name` (TEXT, NOT NULL)
-  - [ ] `device_type` (ENUM: desktop|mobile, NOT NULL)
-  - [ ] `window_width` (INT, 100..10000)
-  - [ ] `window_height` (INT, 100..10000)
-  - [ ] `user_agent` (TEXT, NOT NULL)
-  - [ ] `country` (CHAR(2), nullable)
-  - [ ] `custom_headers` (JSONB, default [])
-  - [ ] `extras` (JSONB, default {})
-  - [ ] `version` (INT, default 1)
-  - [ ] `created_at`, `updated_at` (timestamptz)
-  - [ ] `deleted_at` (timestamptz NULL)
+- [x] Create `app/models/device_profile.py`
+  - [x] `id` (UUID PK)
+  - [x] `owner_id` (UUID, NOT NULL)
+  - [x] `name` (TEXT, NOT NULL)
+  - [x] `device_type` (ENUM: desktop|mobile, NOT NULL)
+  - [x] `window_width` (INT, 100..10000)
+  - [x] `window_height` (INT, 100..10000)
+  - [x] `user_agent` (TEXT, NOT NULL)
+  - [x] `country` (CHAR(2), nullable)
+  - [x] `custom_headers` (JSON, default [])
+  - [x] `extras` (JSON, default {})
+  - [x] `version` (INT, default 1)
+  - [x] `created_at`, `updated_at` (timestamptz)
+  - [x] `deleted_at` (timestamptz NULL)
 
 ### 2.2 Template Model
-- [ ] Create `app/models/template.py`
-  - [ ] `id` (UUID PK)
-  - [ ] `name` (TEXT UNIQUE)
-  - [ ] `description` (TEXT NULL)
-  - [ ] `data` (JSONB NOT NULL)
-  - [ ] `version` (TEXT NULL)
-  - [ ] `created_at`, `updated_at` (timestamptz)
+- [x] Create `app/models/template.py`
+  - [x] `id` (UUID PK)
+  - [x] `name` (TEXT UNIQUE)
+  - [x] `description` (TEXT NULL)
+  - [x] `data` (JSON NOT NULL)
+  - [x] `version` (TEXT NULL)
+  - [x] `created_at`, `updated_at` (timestamptz)
 
 ### 2.3 User Model
-- [ ] Create `app/models/user.py`
-  - [ ] `id` (UUID PK)
-  - [ ] `email` (VARCHAR(255) UNIQUE NOT NULL)
-  - [ ] `name` (VARCHAR(255) NOT NULL)
-  - [ ] `is_active` (BOOLEAN, default TRUE)
-  - [ ] `created_at`, `updated_at` (timestamptz)
+- [x] Create `app/models/user.py`
+  - [x] `id` (UUID PK)
+  - [x] `email` (VARCHAR(255) UNIQUE NOT NULL)
+  - [x] `is_active` (BOOLEAN, default TRUE)
+  - [x] `created_at`, `updated_at` (timestamptz)
 
 ### 2.4 API Key Model
-- [ ] Create `app/models/api_key.py`
-  - [ ] `id` (UUID PK)
-  - [ ] `owner_id` (UUID NOT NULL, FK to users)
-  - [ ] `key_hash` (TEXT UNIQUE NOT NULL)
-  - [ ] `created_at`, `last_used_at`
+- [x] Create `app/models/api_key.py`
+  - [x] `id` (UUID PK)
+  - [x] `owner_id` (UUID NOT NULL, FK to users)
+  - [x] `key_hash` (TEXT UNIQUE NOT NULL)
+  - [x] `created_at`, `updated_at` (timestamptz)
 
 ### 2.5 Database Indexes
-- [ ] Create unique partial index: `(owner_id, lower(name)) WHERE deleted_at IS NULL`
+- [x] Create unique partial index: `(owner_id, lower(name)) WHERE deleted_at IS NULL`
 - [ ] Create performance index: `(owner_id, updated_at DESC)`
-- [ ] Create unique index on users.email
+- [x] Create unique index on users.email
 
 ### 2.6 Alembic Migrations
 - [ ] Generate initial migration: `alembic revision --autogenerate -m "Initial migration"`
@@ -108,16 +107,16 @@
 ## Phase 3: Authentication & Authorization
 
 ### 3.1 API Key Authentication
-- [ ] Create `app/auth.py` with API key validation
-  - [ ] Hash API key with pepper using SHA-256
-  - [ ] Lookup API key in database
-  - [ ] Return owner_id on successful authentication
-  - [ ] Handle missing/invalid keys (401 Unauthorized)
+- [x] Create `app/auth.py` with API key validation
+  - [x] Hash API key with pepper using SHA-256
+  - [x] Lookup API key in database
+  - [x] Return owner_id on successful authentication
+  - [x] Handle missing/invalid keys (401 Unauthorized)
 
 ### 3.2 Owner Scoping
-- [ ] Ensure all repository queries filter by owner_id
-- [ ] Never fetch by ID without owner scoping
-- [ ] Return 404 (not 403) for other users' resources
+- [x] Ensure all repository queries filter by owner_id
+- [x] Never fetch by ID without owner scoping
+- [x] Return 404 (not 403) for other users' resources
 
 ## Phase 4: Validation & Business Logic
 
@@ -194,12 +193,12 @@
 ## Phase 7: API Endpoints
 
 ### 7.1 Device Profile Endpoints
-- [ ] Create `app/routers/device_profiles.py`
-  - [ ] `GET /api/v1/device-profiles` - List profiles with pagination
-  - [ ] `POST /api/v1/device-profiles` - Create profile
-  - [ ] `GET /api/v1/device-profiles/{id}` - Get profile with ETag
-  - [ ] `PATCH /api/v1/device-profiles/{id}` - Update profile with If-Match
-  - [ ] `DELETE /api/v1/device-profiles/{id}` - Soft delete profile
+- [x] Create `app/routers/device_profiles.py`
+  - [x] `GET /api/v1/device-profiles` - List profiles with pagination
+  - [x] `POST /api/v1/device-profiles` - Create profile
+  - [x] `GET /api/v1/device-profiles/{id}` - Get profile with ETag
+  - [x] `PATCH /api/v1/device-profiles/{id}` - Update profile with If-Match
+  - [x] `DELETE /api/v1/device-profiles/{id}` - Soft delete profile
 
 ### 7.2 Template Endpoints
 - [x] Create `app/routers/templates.py`

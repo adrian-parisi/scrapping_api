@@ -253,3 +253,78 @@ class TestDeviceProfileCRUD:
         
         assert response.status_code == status.HTTP_428_PRECONDITION_REQUIRED
         assert "If-Match header required" in response.json()["detail"]
+
+    def test_authentication_required_on_all_endpoints(self, client, test_api_key, sample_device_profile_data, db_session, test_user):
+        """Test that authentication is required on all device profile endpoints."""
+        from app.models.device_profile import DeviceProfile
+        from app.schemas.device_profile import DeviceType
+        
+        _, raw_key = test_api_key
+        headers = {"Authorization": f"Bearer {raw_key}"}
+        
+        # Create a profile first
+        create_response = client.post(
+            "/api/v1/device-profiles",
+            json=sample_device_profile_data,
+            headers=headers
+        )
+        assert create_response.status_code == status.HTTP_201_CREATED
+        profile_id = create_response.json()["id"]
+        
+        # Test GET /device-profiles (list) without authentication
+        response = client.get("/api/v1/device-profiles")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        
+        # Test GET /device-profiles/{id} without authentication
+        response = client.get(f"/api/v1/device-profiles/{profile_id}")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        
+        # Test PATCH /device-profiles/{id} without authentication
+        response = client.patch(
+            f"/api/v1/device-profiles/{profile_id}",
+            json={"name": "Updated Profile"}
+        )
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        
+        # Test DELETE /device-profiles/{id} without authentication
+        response = client.delete(f"/api/v1/device-profiles/{profile_id}")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_cannot_access_other_users_profile(self, client, db_session, test_user, sample_device_profile_data, authenticated_headers):
+        """Test that users cannot access other users' profiles (404, not 403)."""
+        from app.models.user import User
+        from app.models.api_key import APIKey
+        import hashlib
+        from app.settings import settings
+        
+        # Create another user
+        other_user = User(email="other@example.com")
+        db_session.add(other_user)
+        db_session.commit()
+        db_session.refresh(other_user)
+        
+        # Create API key for other user
+        raw_key = "other-user-key-12345"
+        key_hash = hashlib.sha256(f"{raw_key}{settings.api_key_pepper}".encode()).hexdigest()
+        other_api_key = APIKey(owner_id=other_user.id, key_hash=key_hash)
+        db_session.add(other_api_key)
+        db_session.commit()
+        
+        # Create profile for test_user using authenticated headers
+        create_response = client.post(
+            "/api/v1/device-profiles",
+            json=sample_device_profile_data,
+            headers=authenticated_headers
+        )
+        assert create_response.status_code == status.HTTP_201_CREATED
+        profile_id = create_response.json()["id"]
+        
+        # Try to access with other user's credentials
+        response = client.get(
+            f"/api/v1/device-profiles/{profile_id}",
+            headers={"Authorization": f"Bearer {raw_key}"}
+        )
+        
+        # Should return 404 (not 403) for other users' resources
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "not found" in response.json()["detail"].lower()

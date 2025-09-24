@@ -69,10 +69,15 @@ def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse
         detail=exc.detail
     )
     
+    # Preserve custom headers from the exception (e.g., WWW-Authenticate)
+    headers = {"Content-Type": "application/problem+json"}
+    if exc.headers:
+        headers.update(exc.headers)
+    
     return JSONResponse(
         status_code=exc.status_code,
         content=problem_detail.model_dump(),
-        headers={"Content-Type": "application/problem+json"}
+        headers=headers
     )
 
 
