@@ -10,9 +10,10 @@ from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
 
 from app.db import Base
+from app.models.mixins import TimestampMixin
 
 
-class User(Base):
+class User(Base, TimestampMixin):
     """User account for API authentication."""
     
     __tablename__ = "users"
@@ -25,10 +26,6 @@ class User(Base):
     
     # Account status
     is_active = Column(Boolean, nullable=False, default=True)
-    
-    # Timestamps
-    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
     device_profiles = relationship("DeviceProfile", back_populates="owner")

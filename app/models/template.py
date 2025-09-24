@@ -9,9 +9,10 @@ from sqlalchemy import Column, DateTime, String, Text, JSON
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 
 from app.db import Base
+from app.models.mixins import TimestampMixin
 
 
-class Template(Base):
+class Template(Base, TimestampMixin):
     """Predefined device profile templates."""
     
     __tablename__ = "templates"
@@ -21,17 +22,13 @@ class Template(Base):
     
     # Template details
     name = Column(Text, nullable=False, unique=True)
-    description = Column(Text, nullable=True)
+    description = Column(Text, nullable=False, default="")
     
     # Template data as full profile-like payload snapshot
     data = Column(JSON, nullable=False)
     
     # Template version (e.g., "Chrome 120", "iOS 17")
-    version = Column(String(50), nullable=True)
-    
-    # Timestamps
-    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    version = Column(String(50), nullable=False, default="")
     
     def __repr__(self) -> str:
         """String representation of the model."""

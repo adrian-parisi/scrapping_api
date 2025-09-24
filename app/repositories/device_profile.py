@@ -5,7 +5,7 @@ Device profile repository for data access operations.
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session, Query
 
 from app.models.device_profile import DeviceProfile
@@ -27,7 +27,7 @@ class DeviceProfileRepository:
             owner_id: Owner ID to filter by
             
         Returns:
-            Query: SQLAlchemy query object
+            Query: SQLAlchemy query object for fastapi-pagination
         """
         return self.db.query(DeviceProfile).filter(
             and_(
@@ -76,13 +76,16 @@ class DeviceProfileRepository:
         Returns:
             Optional[DeviceProfile]: Profile if found, None otherwise
         """
-        return self.db.query(DeviceProfile).filter(
-            and_(
-                DeviceProfile.id == profile_id,
-                DeviceProfile.owner_id == owner_id,
-                DeviceProfile.deleted_at.is_(None)
+        result = self.db.execute(
+            select(DeviceProfile).where(
+                and_(
+                    DeviceProfile.id == profile_id,
+                    DeviceProfile.owner_id == owner_id,
+                    DeviceProfile.deleted_at.is_(None)
+                )
             )
-        ).first()
+        )
+        return result.scalar_one_or_none()
     
     def list(self, owner_id: UUID, limit: int, offset: int) -> tuple[List[DeviceProfile], int]:
         """
@@ -96,17 +99,24 @@ class DeviceProfileRepository:
         Returns:
             tuple[List[DeviceProfile], int]: Profiles and total count
         """
-        query = self.db.query(DeviceProfile).filter(
+        base_query = select(DeviceProfile).where(
             and_(
                 DeviceProfile.owner_id == owner_id,
                 DeviceProfile.deleted_at.is_(None)
             )
         )
         
-        total_count = query.count()
-        profiles = query.order_by(DeviceProfile.updated_at.desc()).offset(offset).limit(limit).all()
+        # Get total count
+        count_result = self.db.execute(select(func.count()).select_from(base_query.subquery()))
+        total_count = count_result.scalar()
         
-        return profiles, total_count
+        # Get paginated results
+        profiles_result = self.db.execute(
+            base_query.order_by(DeviceProfile.updated_at.desc()).offset(offset).limit(limit)
+        )
+        profiles = profiles_result.scalars().all()
+        
+        return list(profiles), total_count
     
     def update(self, owner_id: UUID, profile_id: UUID, update_data: DeviceProfileUpdate, version: int) -> Optional[DeviceProfile]:
         """
@@ -177,15 +187,17 @@ class DeviceProfileRepository:
         Returns:
             bool: True if name exists, False otherwise
         """
-        query = self.db.query(DeviceProfile).filter(
-            and_(
-                DeviceProfile.owner_id == owner_id,
-                DeviceProfile.name == name,
-                DeviceProfile.deleted_at.is_(None)
-            )
+        base_conditions = and_(
+            DeviceProfile.owner_id == owner_id,
+            DeviceProfile.name == name,
+            DeviceProfile.deleted_at.is_(None)
         )
         
         if exclude_id:
-            query = query.filter(DeviceProfile.id != exclude_id)
+            base_conditions = and_(base_conditions, DeviceProfile.id != exclude_id)
         
-        return query.first() is not None
+        result = self.db.execute(
+            select(DeviceProfile).where(base_conditions)
+        )
+        
+        return result.scalar_one_or_none() is not None

@@ -8,6 +8,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from app.models.user import User
 from app.models.api_key import APIKey
@@ -59,7 +60,10 @@ class UserRepository:
         Returns:
             Optional[User]: User if found, None otherwise
         """
-        return self.db.query(User).filter(User.email == email).first()
+        result = self.db.execute(
+            select(User).where(User.email == email)
+        )
+        return result.scalar_one_or_none()
     
     def get_by_id(self, user_id: UUID) -> Optional[User]:
         """
@@ -71,7 +75,10 @@ class UserRepository:
         Returns:
             Optional[User]: User if found, None otherwise
         """
-        return self.db.query(User).filter(User.id == user_id).first()
+        result = self.db.execute(
+            select(User).where(User.id == user_id)
+        )
+        return result.scalar_one_or_none()
     
     def create_api_key(self, user_id: UUID) -> tuple[APIKey, str]:
         """
@@ -118,7 +125,10 @@ class UserRepository:
         Returns:
             List[APIKey]: List of API keys
         """
-        return self.db.query(APIKey).filter(APIKey.owner_id == user_id).all()
+        result = self.db.execute(
+            select(APIKey).where(APIKey.owner_id == user_id)
+        )
+        return list(result.scalars().all())
     
     def get_or_create_user(self, email: str) -> User:
         """

@@ -89,14 +89,14 @@ def validation_exception_handler(request: Request, exc: Exception) -> JSONRespon
     """
     problem_detail = create_problem_detail(
         request=request,
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         title="Validation Error",
         detail="Request validation failed",
         error_type="https://zenrows.com/problems/validation-error"
     )
     
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         content=problem_detail.model_dump(),
         headers={"Content-Type": "application/problem+json"}
     )

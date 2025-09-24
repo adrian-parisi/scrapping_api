@@ -10,9 +10,10 @@ from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
 
 from app.db import Base
+from app.models.mixins import TimestampMixin
 
 
-class APIKey(Base):
+class APIKey(Base, TimestampMixin):
     """API key for ZenRows API authentication."""
     
     __tablename__ = "api_keys"
@@ -25,9 +26,6 @@ class APIKey(Base):
     
     # Hashed API key
     key_hash = Column(Text, nullable=False, unique=True)
-    
-    # Timestamps
-    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     
     # Relationships
     owner = relationship("User", back_populates="api_keys")

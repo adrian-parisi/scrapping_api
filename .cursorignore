@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+
+# Cache
+.pytest_cache/
+.cache/
+
+# Git
+.git/
+
+# Docker
+docker-compose.test.yml
+
+# Dependencies
+poetry.lock
+
+# Editor/Tool specific
+.cursor/

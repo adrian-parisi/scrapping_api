@@ -23,11 +23,7 @@ class TemplateResponse(BaseModel):
     updated_at: datetime
     
     model_config = {
-        "from_attributes": True,
-        "json_encoders": {
-            datetime: lambda v: v.isoformat(),
-            UUID: lambda v: str(v)
-        }
+        "from_attributes": True
     }
 
 

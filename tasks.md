@@ -16,7 +16,7 @@
     - [x] `device_profile.py` - Device profile SQLAlchemy model
     - [x] `template.py` - Template SQLAlchemy model
     - [x] `api_key.py` - API key SQLAlchemy model
-    - [ ] `user.py` - User SQLAlchemy model
+    - [x] `user.py` - User SQLAlchemy model
   - [x] `app/schemas/` directory with:
     - [x] `device_profile.py` - Pydantic schemas for device profiles
     - [x] `template.py` - Pydantic schemas for templates
@@ -27,22 +27,22 @@
   - [x] `app/routers/` directory with:
     - [x] `device_profiles.py` - Device profile API endpoints
     - [x] `templates.py` - Template API endpoints
-  - [ ] `scripts/` directory with:
-    - [ ] `create_user.py` - Command-line script for user creation
+  - [x] `scripts/` directory with:
+    - [x] `create_user.py` - Command-line script for user creation
   - [x] `app/middleware/` directory with:
     - [x] `request_id.py` - Request ID middleware for correlation tracking
     - [x] `request_size.py` - Request size limiting middleware
 
 ### 1.2 Configuration Setup
-- [ ] Create `app/settings.py` with environment variable loading
-  - [ ] `DATABASE_URL` - PostgreSQL connection string
-  - [ ] `API_KEY_PEPPER` - Secret for API key hashing
-  - [ ] `DEFAULT_PAGE_SIZE` - Default pagination size (25)
-  - [ ] `MAX_PAGE_SIZE` - Maximum pagination size (100)
-  - [ ] `MAX_REQUEST_SIZE` - Maximum request body size (1MB)
-  - [ ] Case-insensitive environment variable loading
-- [ ] Create `.env.example` with all required environment variables
-- [ ] Update `pyproject.toml` with required dependencies
+- [x] Create `app/settings.py` with environment variable loading
+  - [x] `DATABASE_URL` - Database connection string (SQLite for tests, PostgreSQL for production)
+  - [x] `API_KEY_PEPPER` - Secret for API key hashing
+  - [x] `DEFAULT_PAGE_SIZE` - Default pagination size (25)
+  - [x] `MAX_PAGE_SIZE` - Maximum pagination size (100)
+  - [x] `MAX_REQUEST_SIZE` - Maximum request body size (1MB)
+  - [x] Case-insensitive environment variable loading
+- [x] Create `.env.example` with all required environment variables
+- [x] Update `pyproject.toml` with required dependencies
 
 ### 1.3 Database Setup
 - [ ] Initialize Alembic: `alembic init alembic`

@@ -6,6 +6,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from sqlalchemy.orm import Session, Query
+from sqlalchemy import select
 
 from app.models.template import Template
 from app.schemas.device_profile import DeviceProfileCreateFromTemplate
@@ -19,12 +20,12 @@ class TemplateRepository:
         """Initialize repository with database session."""
         self.db = db
     
-    def get_query(self) -> Query:
+    def get_query(self):
         """
         Get base query for templates.
         
         Returns:
-            Query: SQLAlchemy query object
+            Query: SQLAlchemy query object for fastapi-pagination
         """
         return self.db.query(Template).order_by(Template.name)
     
@@ -35,7 +36,8 @@ class TemplateRepository:
         Returns:
             List[Template]: All templates
         """
-        return self.db.query(Template).order_by(Template.name).all()
+        result = self.db.execute(select(Template).order_by(Template.name))
+        return list(result.scalars().all())
     
     def get_by_id(self, template_id: UUID) -> Optional[Template]:
         """
@@ -47,7 +49,10 @@ class TemplateRepository:
         Returns:
             Optional[Template]: Template if found, None otherwise
         """
-        return self.db.query(Template).filter(Template.id == template_id).first()
+        result = self.db.execute(
+            select(Template).where(Template.id == template_id)
+        )
+        return result.scalar_one_or_none()
     
     def create_profile_from_template(
         self, 

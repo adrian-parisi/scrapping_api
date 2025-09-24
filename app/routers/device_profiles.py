@@ -5,7 +5,7 @@ Device profile API endpoints.
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -60,7 +60,11 @@ async def create_device_profile(
         )
     
     profile = repository.create(owner_id, profile_data)
-    return DeviceProfileResponse.model_validate(profile)
+    response_data = DeviceProfileResponse.model_validate(profile).model_dump(mode='json')
+    response = JSONResponse(content=response_data, status_code=status.HTTP_201_CREATED)
+    response.headers["ETag"] = f'W/"{profile.version}"'
+    
+    return response
 
 
 @router.get("/device-profiles/{profile_id}", response_model=DeviceProfileResponse)
@@ -79,7 +83,8 @@ async def get_device_profile(
             detail="Device profile not found"
         )
     
-    response = JSONResponse(content=DeviceProfileResponse.model_validate(profile).model_dump())
+    response_data = DeviceProfileResponse.model_validate(profile).model_dump(mode='json')
+    response = JSONResponse(content=response_data)
     response.headers["ETag"] = f'W/"{profile.version}"'
     
     return response
@@ -136,7 +141,8 @@ async def update_device_profile(
                 detail=f"Version mismatch. Current version: {existing_profile.version}"
             )
     
-    response = JSONResponse(content=DeviceProfileResponse.model_validate(profile).model_dump())
+    response_data = DeviceProfileResponse.model_validate(profile).model_dump(mode='json')
+    response = JSONResponse(content=response_data)
     response.headers["ETag"] = f'W/"{profile.version}"'
     
     return response

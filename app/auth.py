@@ -9,6 +9,7 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from app.db import get_db
 from app.models.api_key import APIKey
@@ -59,7 +60,8 @@ def get_current_owner_id(
     api_key_hash = hash_api_key(credentials.credentials)
     
     # Look up API key in database
-    api_key = db.query(APIKey).filter(APIKey.key_hash == api_key_hash).first()
+    result = db.execute(select(APIKey).where(APIKey.key_hash == api_key_hash))
+    api_key = result.scalar_one_or_none()
     
     if not api_key:
         raise HTTPException(
