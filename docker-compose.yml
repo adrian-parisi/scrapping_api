@@ -13,7 +13,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U zenrows_user -d zenrows_api"]
+      test: [ "CMD-SHELL", "pg_isready -U zenrows_user -d zenrows_api" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +33,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./scripts:/app/scripts:ro  # Mount scripts for database initialization
+      - ./scripts:/app/scripts:ro # Mount scripts for database initialization
     networks:
       - zenrows-network
     restart: unless-stopped
@@ -48,8 +48,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    entrypoint: [ "sh", "-c" ]
     command: >
-      sh -c "
+      "
         echo 'Waiting for database to be ready...' &&
         sleep 5 &&
         echo 'Running database migrations...' &&
@@ -63,6 +64,7 @@ services:
 
 volumes:
   postgres_data:
+
 
 networks:
   zenrows-network:

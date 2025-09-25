@@ -21,6 +21,10 @@ The API will be available at http://localhost:8080
 
 ### 2. Create a User and API Key
 ```bash
+# Copy the environment template
+cp env.example .env
+
+# Create user and API key (uses .env automatically)
 poetry run python scripts/create_user.py user@example.com
 ```
 This will output an API key like: `ak_1234567890abcdef...`
@@ -28,7 +32,7 @@ This will output an API key like: `ak_1234567890abcdef...`
 ### 3. Test the API
 ```bash
 # Test with your API key
-curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8080/api/v1/device-profiles
+curl -H "Authorization: Bearer YOUR_API_KEY" "http://localhost:8080/api/v1/device-profiles?page=1&size=10"
 
 # Or visit the interactive docs
 open http://localhost:8080/docs
@@ -49,6 +53,23 @@ curl -X POST http://localhost:8080/api/v1/device-profiles \
     "custom_headers": [
       {"name": "Authorization", "value": "Bearer secret123", "secret": true}
     ]
+  }'
+```
+
+### 5. List Templates
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" "http://localhost:8080/api/v1/templates"
+```
+
+### 6. Create Profile from Template
+```bash
+# Use a template ID from step 5 (replace TEMPLATE_ID with actual ID)
+curl -X POST http://localhost:8080/api/v1/templates/TEMPLATE_ID/create-profile \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Chrome Profile from Template",
+    "country": "us"
   }'
 ```
 
@@ -87,6 +108,7 @@ Once the application is running, you can access:
 └── docker-compose.yml   # Docker services
 ```
 
+
 ## Features
 
 - Device profile CRUD operations
@@ -107,6 +129,16 @@ Once the application is running, you can access:
 - **API Key Auth**: Simplest choice, matches the exercise requirements.
 - **Docker python:3.12-slim-bookworm**: Small, secure base image, fast builds. Considered Alpine for smaller size but chose Debian for better compatibility with Python packages.
 - **pytest**: I've used it for years; fixtures make tests easy to write and maintain.
+
+## Architecture Considerations
+
+For this interview exercise, I've kept the architecture intentionally simple with a flat structure. In a production system, you'd likely want domain-driven separation:
+
+- **`accounts/`** - User management, API keys (`models/`, `repositories/`, `schemas/`, `routers/`)
+- **`profiles/`** - Device profile management (`models/`, `repositories/`, `schemas/`, `routers/`)
+- **`templates/`** - Template management (`models/`, `repositories/`, `schemas/`, `routers/`)
+
+This would provide better organization and domain isolation as the system grows, but for the scope of this assessment, the flat structure keeps things straightforward and maintainable.
 
 ## Out of Scope
 
