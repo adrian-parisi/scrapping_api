@@ -289,16 +289,15 @@
 ## Phase 11: Docker & Deployment
 
 ### 11.1 Docker Configuration
-- [ ] Create `Dockerfile`
-  - [ ] Base: python:3.12-slim
-  - [ ] Install app + runtime deps only
-  - [ ] EXPOSE 8080
-  - [ ] Entrypoint: uvicorn app.main:app --host 0.0.0.0 --port 8080
+- [x] Create `Dockerfile`
+  - [x] Base: python:3.12-slim
+  - [x] Install app + runtime deps only
+  - [x] EXPOSE 8080
+  - [x] Entrypoint: uvicorn app.main:app --host 0.0.0.0 --port 8080
 
 ### 11.2 Docker Compose (Optional)
-- [ ] Create `docker-compose.yml` for local development
-- [ ] Include PostgreSQL service
-- [ ] Include Redis service (if needed)
+- [x] Create `docker-compose.yml` for local development
+- [x] Include PostgreSQL service
 
 ## Phase 12: Documentation & Demo
 

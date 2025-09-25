@@ -28,8 +28,8 @@ class User(Base, TimestampMixin):
     is_active = Column(Boolean, nullable=False, default=True)
     
     # Relationships
-    device_profiles = relationship("DeviceProfile", back_populates="owner")
-    api_keys = relationship("APIKey", back_populates="owner")
+    device_profiles = relationship("DeviceProfile", back_populates="owner", lazy="select")
+    api_keys = relationship("APIKey", back_populates="owner", lazy="select")
     
     def __repr__(self) -> str:
         """String representation of the model."""

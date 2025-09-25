@@ -1,0 +1,79 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Documentation
+*.md
+docs/
+
+# Tests
+tests/
+.pytest_cache/
+
+# Development files
+.env.example
+env.template
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Scripts (keep only production scripts)
+scripts/seed_templates.py
+scripts/create_user.py

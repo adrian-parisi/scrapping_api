@@ -24,6 +24,9 @@ from sqlalchemy.orm import Session
 from app.db import SessionLocal
 from app.repositories.user import UserRepository
 
+# Import all models to ensure they are registered with SQLAlchemy
+from app.models import *  # noqa: F401, F403
+
 
 def main():
     """Main function to create user and generate API key."""

@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 
-from app.core.errors import setup_exception_handlers
+from fastapi_problem.handler import add_exception_handler, new_exception_handler
 from app.middleware.request_id import RequestIDMiddleware
 from app.middleware.request_size import RequestSizeMiddleware
 from app.routers import device_profiles, templates
@@ -30,8 +30,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Setup exception handlers
-setup_exception_handlers(app)
+# Setup error handling using fastapi-problem (handles all exceptions)
+exception_handler = new_exception_handler()
+add_exception_handler(app, exception_handler)
 
 # Include routers
 app.include_router(device_profiles.router, prefix="/api/v1", tags=["device-profiles"])
