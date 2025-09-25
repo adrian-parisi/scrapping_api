@@ -328,3 +328,340 @@ class TestDeviceProfileCRUD:
         # Should return 404 (not 403) for other users' resources
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "not found" in response.json()["detail"].lower()
+
+    def test_country_validation(self, client, authenticated_headers, sample_device_profile_data):
+        """Test country code validation using pycountry library."""
+        import uuid
+        
+        # Test valid country codes
+        valid_countries = ["us", "gb", "fr", "de", "ca", "au", "jp"]
+        
+        for i, country in enumerate(valid_countries):
+            profile_data = sample_device_profile_data.copy()
+            profile_data["country"] = country
+            profile_data["name"] = f"Test Profile {country.upper()} {i}"  # Unique name
+            
+            response = client.post(
+                "/api/v1/device-profiles",
+                json=profile_data,
+                headers=authenticated_headers
+            )
+            
+            assert response.status_code == status.HTTP_201_CREATED
+            assert response.json()["country"] == country
+        
+        # Test invalid country codes (must be 2 characters due to max_length=2)
+        invalid_countries = ["xx", "zz", "12", "ab"]
+        
+        for i, country in enumerate(invalid_countries):
+            profile_data = sample_device_profile_data.copy()
+            profile_data["country"] = country
+            profile_data["name"] = f"Invalid Profile {i}"  # Unique name
+            
+            response = client.post(
+                "/api/v1/device-profiles",
+                json=profile_data,
+                headers=authenticated_headers
+            )
+            
+            assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+            error_detail = response.json()["detail"]
+            assert isinstance(error_detail, list)
+            assert len(error_detail) > 0
+            assert "Invalid country code" in error_detail[0]["msg"]
+
+    def test_window_size_validation(self, client, authenticated_headers, sample_device_profile_data):
+        """Test window size validation (100-10000 range and mobile restrictions)."""
+        # Test valid window sizes
+        valid_sizes = [
+            (100, 100),      # Minimum
+            (1920, 1080),    # Common desktop
+            (375, 667),      # Common mobile
+            (10000, 10000)   # Maximum
+        ]
+        
+        for i, (width, height) in enumerate(valid_sizes):
+            profile_data = sample_device_profile_data.copy()
+            profile_data["window_width"] = width
+            profile_data["window_height"] = height
+            profile_data["name"] = f"Valid Size {i}"
+            
+            response = client.post(
+                "/api/v1/device-profiles",
+                json=profile_data,
+                headers=authenticated_headers
+            )
+            
+            assert response.status_code == status.HTTP_201_CREATED
+            assert response.json()["window_width"] == width
+            assert response.json()["window_height"] == height
+        
+        # Test invalid window sizes (too small)
+        invalid_sizes = [
+            (99, 100),       # Width too small
+            (100, 99),       # Height too small
+            (50, 50),        # Both too small
+        ]
+        
+        for i, (width, height) in enumerate(invalid_sizes):
+            profile_data = sample_device_profile_data.copy()
+            profile_data["window_width"] = width
+            profile_data["window_height"] = height
+            profile_data["name"] = f"Invalid Small {i}"
+            
+            response = client.post(
+                "/api/v1/device-profiles",
+                json=profile_data,
+                headers=authenticated_headers
+            )
+            
+            assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        
+        # Test invalid window sizes (too large)
+        invalid_large_sizes = [
+            (10001, 1000),   # Width too large
+            (1000, 10001),   # Height too large
+            (20000, 20000),  # Both too large
+        ]
+        
+        for i, (width, height) in enumerate(invalid_large_sizes):
+            profile_data = sample_device_profile_data.copy()
+            profile_data["window_width"] = width
+            profile_data["window_height"] = height
+            profile_data["name"] = f"Invalid Large {i}"
+            
+            response = client.post(
+                "/api/v1/device-profiles",
+                json=profile_data,
+                headers=authenticated_headers
+            )
+            
+            assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        
+        # Test mobile ultra-wide restriction
+        mobile_ultra_wide = {
+            "name": "Mobile Ultra Wide",
+            "device_type": "mobile",
+            "window_width": 3000,  # Too wide for mobile
+            "window_height": 2000,
+            "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)",
+            "country": "us",
+            "custom_headers": [],
+            "extras": {}
+        }
+        
+        response = client.post(
+            "/api/v1/device-profiles",
+            json=mobile_ultra_wide,
+            headers=authenticated_headers
+        )
+        
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        error_detail = response.json()["detail"]
+        assert isinstance(error_detail, list)
+        assert len(error_detail) > 0
+        assert "ultra-wide viewports" in error_detail[0]["msg"]
+
+    def test_custom_headers_validation(self, client, authenticated_headers, sample_device_profile_data):
+        """Test custom headers validation (forbidden headers and format)."""
+        # Test valid custom headers
+        valid_headers = [
+            {"name": "X-Custom-Header", "value": "test-value"},
+            {"name": "User-Agent-Override", "value": "Custom Agent"},
+            {"name": "X-API-Key", "value": "secret-key"},
+            {"name": "Accept-Language", "value": "en-US,en;q=0.9"},
+        ]
+        
+        profile_data = sample_device_profile_data.copy()
+        profile_data["custom_headers"] = valid_headers
+        profile_data["name"] = "Valid Headers Profile"
+        
+        response = client.post(
+            "/api/v1/device-profiles",
+            json=profile_data,
+            headers=authenticated_headers
+        )
+        
+        assert response.status_code == status.HTTP_201_CREATED
+        assert len(response.json()["custom_headers"]) == 4
+        
+        # Test forbidden hop-by-hop headers
+        forbidden_hop_by_hop = [
+            {"name": "Connection", "value": "close"},
+            {"name": "Keep-Alive", "value": "timeout=5"},
+            {"name": "Transfer-Encoding", "value": "chunked"},
+            {"name": "Upgrade", "value": "websocket"},
+        ]
+        
+        for i, header in enumerate(forbidden_hop_by_hop):
+            profile_data = sample_device_profile_data.copy()
+            profile_data["custom_headers"] = [header]
+            profile_data["name"] = f"Forbidden Hop {i}"
+            
+            response = client.post(
+                "/api/v1/device-profiles",
+                json=profile_data,
+                headers=authenticated_headers
+            )
+            
+            assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+            error_detail = response.json()["detail"]
+            assert isinstance(error_detail, list)
+            assert len(error_detail) > 0
+            assert "Forbidden header" in error_detail[0]["msg"]
+            assert header["name"].lower() in error_detail[0]["msg"]
+        
+        # Test forbidden controlled headers
+        forbidden_controlled = [
+            {"name": "Host", "value": "malicious.com"},
+            {"name": "Content-Length", "value": "100"},
+            {"name": "Content-Type", "value": "application/json"},
+            {"name": "Content-Encoding", "value": "gzip"},
+        ]
+        
+        for i, header in enumerate(forbidden_controlled):
+            profile_data = sample_device_profile_data.copy()
+            profile_data["custom_headers"] = [header]
+            profile_data["name"] = f"Forbidden Controlled {i}"
+            
+            response = client.post(
+                "/api/v1/device-profiles",
+                json=profile_data,
+                headers=authenticated_headers
+            )
+            
+            assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+            error_detail = response.json()["detail"]
+            assert isinstance(error_detail, list)
+            assert len(error_detail) > 0
+            assert "Forbidden header" in error_detail[0]["msg"]
+            assert header["name"].lower() in error_detail[0]["msg"]
+        
+        # Test forbidden security headers
+        forbidden_security = [
+            {"name": "Authorization", "value": "Bearer token"},
+            {"name": "Cookie", "value": "session=abc123"},
+            {"name": "Set-Cookie", "value": "session=abc123"},
+            {"name": "WWW-Authenticate", "value": "Basic"},
+        ]
+        
+        for i, header in enumerate(forbidden_security):
+            profile_data = sample_device_profile_data.copy()
+            profile_data["custom_headers"] = [header]
+            profile_data["name"] = f"Forbidden Security {i}"
+            
+            response = client.post(
+                "/api/v1/device-profiles",
+                json=profile_data,
+                headers=authenticated_headers
+            )
+            
+            assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+            error_detail = response.json()["detail"]
+            assert isinstance(error_detail, list)
+            assert len(error_detail) > 0
+            assert "Forbidden header" in error_detail[0]["msg"]
+            assert header["name"].lower() in error_detail[0]["msg"]
+        
+        # Test case sensitivity (should be case-insensitive)
+        profile_data = sample_device_profile_data.copy()
+        profile_data["custom_headers"] = [{"name": "CONNECTION", "value": "close"}]
+        profile_data["name"] = "Case Insensitive Test"
+        
+        response = client.post(
+            "/api/v1/device-profiles",
+            json=profile_data,
+            headers=authenticated_headers
+        )
+        
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        error_detail = response.json()["detail"]
+        assert isinstance(error_detail, list)
+        assert len(error_detail) > 0
+        assert "Forbidden header" in error_detail[0]["msg"]
+        assert "connection" in error_detail[0]["msg"]
+        
+        # Test empty header name (Pydantic field validation catches this first)
+        profile_data = sample_device_profile_data.copy()
+        profile_data["custom_headers"] = [{"name": "", "value": "test"}]
+        profile_data["name"] = "Empty Header Name"
+        
+        response = client.post(
+            "/api/v1/device-profiles",
+            json=profile_data,
+            headers=authenticated_headers
+        )
+        
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        error_detail = response.json()["detail"]
+        assert isinstance(error_detail, list)
+        assert len(error_detail) > 0
+        assert "String should have at least 1 character" in error_detail[0]["msg"]
+        
+        # Test whitespace-only header name (our custom validator catches this)
+        profile_data = sample_device_profile_data.copy()
+        profile_data["custom_headers"] = [{"name": "   ", "value": "test"}]
+        profile_data["name"] = "Whitespace Header Name"
+        
+        response = client.post(
+            "/api/v1/device-profiles",
+            json=profile_data,
+            headers=authenticated_headers
+        )
+        
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        error_detail = response.json()["detail"]
+        assert isinstance(error_detail, list)
+        assert len(error_detail) > 0
+        assert "Header name cannot be empty" in error_detail[0]["msg"]
+
+    def test_custom_headers_preserve_order_and_duplicates(self, client, authenticated_headers, sample_device_profile_data):
+        """Test that custom headers preserve order and allow duplicates."""
+        # Test order preservation
+        ordered_headers = [
+            {"name": "X-First", "value": "first"},
+            {"name": "X-Second", "value": "second"},
+            {"name": "X-Third", "value": "third"},
+        ]
+        
+        profile_data = sample_device_profile_data.copy()
+        profile_data["custom_headers"] = ordered_headers
+        profile_data["name"] = "Order Test Profile"
+        
+        response = client.post(
+            "/api/v1/device-profiles",
+            json=profile_data,
+            headers=authenticated_headers
+        )
+        
+        assert response.status_code == status.HTTP_201_CREATED
+        response_headers = response.json()["custom_headers"]
+        assert len(response_headers) == 3
+        assert response_headers[0]["name"] == "X-First"
+        assert response_headers[1]["name"] == "X-Second"
+        assert response_headers[2]["name"] == "X-Third"
+        
+        # Test duplicate headers (should be allowed)
+        duplicate_headers = [
+            {"name": "X-Duplicate", "value": "first"},
+            {"name": "X-Duplicate", "value": "second"},
+            {"name": "X-Duplicate", "value": "third"},
+        ]
+        
+        profile_data = sample_device_profile_data.copy()
+        profile_data["custom_headers"] = duplicate_headers
+        profile_data["name"] = "Duplicate Test Profile"
+        
+        response = client.post(
+            "/api/v1/device-profiles",
+            json=profile_data,
+            headers=authenticated_headers
+        )
+        
+        assert response.status_code == status.HTTP_201_CREATED
+        response_headers = response.json()["custom_headers"]
+        assert len(response_headers) == 3
+        assert all(header["name"] == "X-Duplicate" for header in response_headers)
+        assert response_headers[0]["value"] == "first"
+        assert response_headers[1]["value"] == "second"
+        assert response_headers[2]["value"] == "third"

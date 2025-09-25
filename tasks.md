@@ -121,50 +121,46 @@
 ## Phase 4: Validation & Business Logic
 
 ### 4.1 Country Validation
-- [ ] Create ISO-3166-1 country code validation
-- [ ] Ensure country codes are lowercase
-- [ ] Validate against in-memory set of valid codes
+- [x] Create ISO-3166-1 country code validation
+- [x] Ensure country codes are lowercase
+- [x] Validate against in-memory set of valid codes
 
 ### 4.2 Window Size Validation
-- [ ] Validate window_width/height: 100-10000
-- [ ] Optional: tighter ranges by device type
-- [ ] Cross-field validation: mobile with ultra-wide viewport → reject
+- [x] Validate window_width/height: 100-10000
+- [x] Optional: tighter ranges by device type
+- [x] Cross-field validation: mobile with ultra-wide viewport → reject
 
 ### 4.3 Custom Headers Validation
-- [ ] Validate custom_headers as array of {name, value}
-- [ ] Deny hop-by-hop/controlled names:
-  - [ ] host, content-length, connection, transfer-encoding, keep-alive, upgrade, trailer
-- [ ] Preserve order and duplicates in headers array
+- [x] Validate custom_headers as array of {name, value}
+- [x] Deny hop-by-hop/controlled names:
+  - [x] host, content-length, connection, transfer-encoding, keep-alive, upgrade, trailer
+- [x] Preserve order and duplicates in headers array
 
-### 4.4 Schema Conversion
-- [ ] Implement camelCase ↔ snake_case conversion
-- [ ] Request/Response: device, viewport.width, viewport.height, userAgent, country, headers, extras
-- [ ] DB columns: snake_case
 
 ## Phase 5: Repository Layer
 
 ### 5.1 Device Profile Repository
-- [ ] Create `app/repositories/device_profile.py`
-  - [ ] `create(owner_id, profile_data)` - Create new profile
-  - [ ] `get_by_id(owner_id, profile_id)` - Get profile by ID
-  - [ ] `list(owner_id, limit, offset)` - List profiles with pagination
-  - [ ] `update(owner_id, profile_id, data, version)` - Update profile with version check
-  - [ ] `soft_delete(owner_id, profile_id)` - Soft delete profile
-  - [ ] `check_name_exists(owner_id, name)` - Check for duplicate names
+- [x] Create `app/repositories/device_profile.py`
+  - [x] `create(owner_id, profile_data)` - Create new profile
+  - [x] `get_by_id(owner_id, profile_id)` - Get profile by ID
+  - [x] `list(owner_id, limit, offset)` - List profiles with pagination
+  - [x] `update(owner_id, profile_id, data, version)` - Update profile with version check
+  - [x] `soft_delete(owner_id, profile_id)` - Soft delete profile
+  - [x] `check_name_exists(owner_id, name)` - Check for duplicate names
 
 ### 5.2 Template Repository
-- [ ] Create `app/repositories/template.py`
-  - [ ] `list()` - List all templates
-  - [ ] `get_by_id(template_id)` - Get template by ID
-  - [ ] `create_profile_from_template(owner_id, template_id, overrides)` - Clone template
+- [x] Create `app/repositories/template.py`
+  - [x] `list()` - List all templates
+  - [x] `get_by_id(template_id)` - Get template by ID
+  - [x] `create_profile_from_template(owner_id, template_id, overrides)` - Clone template
 
 ### 5.3 User Repository
-- [ ] Create `app/repositories/user.py`
-  - [ ] `create(email, name)` - Create new user
-  - [ ] `get_by_email(email)` - Get user by email
-  - [ ] `get_by_id(user_id)` - Get user by ID
-  - [ ] `create_api_key(user_id)` - Generate API key for user
-  - [ ] `get_api_keys(user_id)` - List user's API keys
+- [x] Create `app/repositories/user.py`
+  - [x] `create(email, name)` - Create new user
+  - [x] `get_by_email(email)` - Get user by email
+  - [x] `get_by_id(user_id)` - Get user by ID
+  - [x] `create_api_key(user_id)` - Generate API key for user
+  - [x] `get_api_keys(user_id)` - List user's API keys
 
 ### 5.4 User Management Script
 - [x] Create `scripts/create_user.py`
@@ -177,17 +173,17 @@
 ## Phase 6: Pydantic Schemas
 
 ### 6.1 Device Profile Schemas
-- [ ] Create `app/schemas/device_profile.py`
-  - [ ] `DeviceProfileCreate` - For POST requests
-  - [ ] `DeviceProfileUpdate` - For PATCH requests
-  - [ ] `DeviceProfileResponse` - For GET responses
-  - [ ] `DeviceProfileList` - For paginated list responses
+- [x] Create `app/schemas/device_profile.py`
+  - [x] `DeviceProfileCreate` - For POST requests
+  - [x] `DeviceProfileUpdate` - For PATCH requests
+  - [x] `DeviceProfileResponse` - For GET responses
+  - [x] `DeviceProfileList` - For paginated list responses
 
 ### 6.2 Template Schemas
-- [ ] Create `app/schemas/template.py`
-  - [ ] `TemplateResponse` - For template responses
-  - [ ] `TemplateList` - For template list responses
-  - [ ] `CreateProfileFromTemplate` - For template clone requests
+- [x] Create `app/schemas/template.py`
+  - [x] `TemplateResponse` - For template responses
+  - [x] `TemplateList` - For template list responses
+  - [x] `CreateProfileFromTemplate` - For template clone requests
 
 
 ## Phase 7: API Endpoints

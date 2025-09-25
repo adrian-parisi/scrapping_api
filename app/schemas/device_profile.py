@@ -9,7 +9,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator, AfterValidator
 
-from app.validators.device_profile import validate_country_code
+from app.validators.device_profile import validate_country_code, validate_custom_headers
 
 
 class DeviceType(str, Enum):
@@ -34,7 +34,7 @@ class DeviceProfileBase(BaseModel):
     window_height: int = Field(..., ge=100, le=10000)
     user_agent: str = Field(..., min_length=1, max_length=1000)
     country: Annotated[Optional[str], AfterValidator(validate_country_code)] = Field(None, min_length=2, max_length=2)
-    custom_headers: List[CustomHeader] = Field(default_factory=list)
+    custom_headers: Annotated[List[CustomHeader], AfterValidator(validate_custom_headers)] = Field(default_factory=list)
     extras: Dict = Field(default_factory=dict)
     
     
