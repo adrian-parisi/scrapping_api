@@ -4,8 +4,8 @@ Template API endpoints.
 
 from typing import List
 from uuid import UUID
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status, Request
+from fastapi.responses import JSONResponse
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
@@ -61,6 +61,7 @@ async def get_template(
 async def create_profile_from_template(
     template_id: UUID,
     overrides: CreateProfileFromTemplateRequest,
+    request: Request,
     owner_id: UUID = Depends(get_current_owner_id),
     db: Session = Depends(get_db)
 ):
@@ -90,7 +91,18 @@ async def create_profile_from_template(
     # Create the profile
     profile = profile_repository.create(owner_id, profile_data)
     
-    response = JSONResponse(content=DeviceProfileResponse.model_validate(profile).model_dump())
-    response.headers["Location"] = f"/api/v1/device-profiles/{profile.id}"
+    # Return the profile data and let FastAPI handle the response
+    profile_response = DeviceProfileResponse.model_validate(profile)
+    
+    # Generate Location header using url_for
+    location_url = request.url_for("get_device_profile", profile_id=profile.id)
+    
+    # Set Location header using response headers
+    response = Response(
+        content=profile_response.model_dump_json(),
+        media_type="application/json",
+        status_code=status.HTTP_201_CREATED,
+        headers={"Location": str(location_url)}
+    )
     
     return response

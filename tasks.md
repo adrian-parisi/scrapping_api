@@ -201,89 +201,90 @@
   - [x] `GET /api/v1/templates` - List templates
   - [x] `GET /api/v1/templates/{id}` - Get template
   - [x] `POST /api/v1/templates/{id}/create-profile` - Create profile from template
+- [x] Create `scripts/seed_templates.py` - Seed database with predefined templates
 
 ### 7.3 User Management Script (Technical Interview Only)
-- [ ] Create `scripts/create_user.py` - Command-line script for user creation
-  - [ ] Accept email as command-line argument
-  - [ ] Create user with email and generated name
-  - [ ] Generate API key for the user
-  - [ ] Return API key as command output
-  - [ ] **WARNING**: This script is for technical interview purposes only
-  - [ ] **WARNING**: No authentication required - NOT suitable for production
+- [x] Create `scripts/create_user.py` - Command-line script for user creation
+  - [x] Accept email as command-line argument
+  - [x] Create user with email and generated name
+  - [x] Generate API key for the user
+  - [x] Return API key as command output
+  - [x] **WARNING**: This script is for technical interview purposes only
+  - [x] **WARNING**: No authentication required - NOT suitable for production
 
 
 ## Phase 8: Error Handling & Response Format
 
 ### 8.1 Problem+JSON Responses
-- [ ] Create `app/core/errors.py`
-  - [ ] Standardized error response format
-  - [ ] Fields: type, title, status, detail, instance
-  - [ ] Validation error details
-  - [ ] Include request URI in instance field
+- [x] Create `app/core/errors.py`
+  - [x] Standardized error response format
+  - [x] Fields: type, title, status, detail, instance
+  - [x] Validation error details
+  - [x] Include request URI in instance field
 
 ### 8.2 HTTP Status Codes
-- [ ] 201 Created with Location header on create
-- [ ] 200 OK on fetch/update
-- [ ] 204 No Content on delete
-- [ ] 400 Bad Request
-- [ ] 401 Unauthorized
-- [ ] 403 Forbidden
-- [ ] 404 Not Found
-- [ ] 409 Conflict (duplicate name)
-- [ ] 422 Unprocessable Entity (validation errors)
-- [ ] 428 Precondition Required (missing If-Match)
-- [ ] 412 Precondition Failed (ETag mismatch)
+- [x] 201 Created with Location header on create
+- [x] 200 OK on fetch/update
+- [x] 204 No Content on delete
+- [x] 400 Bad Request
+- [x] 401 Unauthorized
+- [x] 403 Forbidden
+- [x] 404 Not Found
+- [x] 409 Conflict (duplicate name)
+- [x] 422 Unprocessable Entity (validation errors)
+- [x] 428 Precondition Required (missing If-Match)
+- [x] 412 Precondition Failed (ETag mismatch)
 
 ## Phase 9: Pagination & Headers
 
 ### 9.1 Pagination Implementation
-- [ ] Create `app/core/pagination.py`
-  - [ ] Query params: limit, offset
-  - [ ] Clamp: 1..MAX_PAGE_SIZE; offset >= 0
-  - [ ] Link header with rel="next"/rel="prev"
+- [x] Create `app/core/pagination.py`
+  - [x] Query params: limit, offset
+  - [x] Clamp: 1..MAX_PAGE_SIZE; offset >= 0
+  - [x] Link header with rel="next"/rel="prev"
 
 ### 9.2 ETag/If-Match Support
-- [ ] Implement ETag generation from version
-- [ ] Validate If-Match header on updates
-- [ ] Return current ETag on 412 Precondition Failed
-- [ ] Bump version atomically with updates
+- [x] Implement ETag generation from version
+- [x] Validate If-Match header on updates
+- [x] Return current ETag on 412 Precondition Failed
+- [x] Bump version atomically with updates
 
 ### 9.3 Request ID Middleware
-- [ ] Create `app/middleware/request_id.py`
-  - [ ] Generate unique request ID for each request
-  - [ ] Add X-Request-ID header to responses
-  - [ ] Include request ID in error responses
+- [x] Create `app/middleware/request_id.py`
+  - [x] Generate unique request ID for each request
+  - [x] Add X-Request-ID header to responses
+  - [x] Include request ID in error responses
 
 ### 9.4 Request Size Limiting
-- [ ] Create `app/middleware/request_size.py`
-  - [ ] Limit request body size to MAX_REQUEST_SIZE
-  - [ ] Return 413 Payload Too Large for oversized requests
-  - [ ] Add X-Request-Size-Limit header to responses
+- [x] Create `app/middleware/request_size.py`
+  - [x] Limit request body size to MAX_REQUEST_SIZE
+  - [x] Return 413 Payload Too Large for oversized requests
+  - [x] Add X-Request-Size-Limit header to responses
 
 ## Phase 10: Testing
 
 ### 10.1 Authentication Tests
-- [ ] Missing API key → 401
-- [ ] Invalid API key → 401
-- [ ] Owner isolation: other user's profile → 404
+- [x] Missing API key → 401
+- [x] Invalid API key → 401
+- [x] Owner isolation: other user's profile → 404
 
 ### 10.2 Profile Tests
-- [ ] Create, fetch, list (pagination)
-- [ ] Duplicate name → 409
+- [x] Create, fetch, list (pagination)
+- [x] Duplicate name → 409
 - [ ] Soft delete excludes from list
 - [ ] Re-create with same name succeeds
 - [ ] ETag present on GET
-- [ ] PATCH without If-Match → 428
-- [ ] Wrong ETag → 412
+- [x] PATCH without If-Match → 428
+- [x] Wrong ETag → 412
 - [ ] Correct ETag → updates + new ETag
-- [ ] Header deny-list enforced (422)
-- [ ] Country and viewport validation (422)
+- [x] Header deny-list enforced (422)
+- [x] Country and viewport validation (422)
 
 ### 10.3 Template Tests
-- [ ] List and get return seeded items
-- [ ] Create from template yields new profile
-- [ ] Optional overrides applied
-- [ ] Location header set on create endpoints
+- [x] List and get return seeded items
+- [x] Create from template yields new profile
+- [x] Optional overrides applied
+- [x] Location header set on create endpoints
 
 ## Phase 11: Docker & Deployment
 

@@ -46,6 +46,7 @@ async def list_device_profiles(
 @router.post("/device-profiles", response_model=DeviceProfileResponse, status_code=status.HTTP_201_CREATED)
 async def create_device_profile(
     profile_data: DeviceProfileCreate,
+    request: Request,
     owner_id: UUID = Depends(get_current_owner_id),
     db: Session = Depends(get_db)
 ):
@@ -60,8 +61,13 @@ async def create_device_profile(
         )
     
     profile = repository.create(owner_id, profile_data)
+    
+    # Generate Location header using url_for
+    location_url = request.url_for("get_device_profile", profile_id=profile.id)
+    
     response_data = DeviceProfileResponse.model_validate(profile).model_dump(mode='json')
     response = JSONResponse(content=response_data, status_code=status.HTTP_201_CREATED)
+    response.headers["Location"] = str(location_url)
     response.headers["ETag"] = f'W/"{profile.version}"'
     
     return response

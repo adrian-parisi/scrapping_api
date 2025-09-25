@@ -82,7 +82,11 @@ class TemplateRepository:
         override_dict = overrides.model_dump(exclude_unset=True)
         for field, value in override_dict.items():
             if field == "custom_headers" and value is not None:
-                profile_data["custom_headers"] = [header.model_dump() for header in value]
+                # Handle both Pydantic objects and dicts
+                if hasattr(value[0], 'model_dump'):
+                    profile_data["custom_headers"] = [header.model_dump() for header in value]
+                else:
+                    profile_data["custom_headers"] = value
             else:
                 profile_data[field] = value
         

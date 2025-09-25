@@ -36,6 +36,10 @@ class TestDeviceProfileCRUD:
         assert data["version"] == 1
         assert "created_at" in data
         assert "updated_at" in data
+        
+        # Verify Location header
+        assert "Location" in response.headers
+        assert f"/api/v1/device-profiles/{data['id']}" in response.headers["Location"]
 
     def test_get_device_profile_success(self, client, authenticated_headers, sample_device_profile_data, db_session, test_user):
         """Test retrieving an existing device profile."""
