@@ -2,6 +2,8 @@
 FastAPI application entry point for ZenRows Device Profile API.
 """
 
+import logging
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
@@ -10,6 +12,16 @@ from fastapi_problem.handler import add_exception_handler, new_exception_handler
 from app.middleware.request_id import RequestIDMiddleware
 from app.middleware.request_size import RequestSizeMiddleware
 from app.routers import device_profiles, templates
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="ZenRows Device Profile API",

@@ -2,63 +2,89 @@
 
 A REST API for managing device profiles used in web scraping operations, built with FastAPI and SQLAlchemy.
 
-## Development Setup
+## Quick Start
 
 ### Prerequisites
 
 - Python 3.12+
 - Poetry
+- Docker & Docker Compose
+- PostgreSQL (or use Docker Compose for local development)
 
-### Installation
+## Getting Started
 
-1. Install dependencies:
+### 1. Start the API Server
 ```bash
-poetry install
+make up
+```
+The API will be available at http://localhost:8080
+
+### 2. Create a User and API Key
+```bash
+poetry run python scripts/create_user.py user@example.com
+```
+This will output an API key like: `ak_1234567890abcdef...`
+
+### 3. Test the API
+```bash
+# Test with your API key
+curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8080/api/v1/device-profiles
+
+# Or visit the interactive docs
+open http://localhost:8080/docs
 ```
 
-2. Set up environment variables:
+### 4. Create Your First Device Profile
 ```bash
-# Create .env file with required variables
-# See app/settings.py for required configuration
+curl -X POST http://localhost:8080/api/v1/device-profiles \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Chrome Profile",
+    "device_type": "desktop",
+    "window_width": 1920,
+    "window_height": 1080,
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "country": "us",
+    "custom_headers": [
+      {"name": "Authorization", "value": "Bearer secret123", "secret": true}
+    ]
+  }'
 ```
 
-## Testing
+## Available Commands
 
-### Using SQLite (Default)
-
-The tests use an in-memory SQLite database for fast and reliable testing.
-
-1. Run tests:
 ```bash
-poetry run pytest -v
+make help  # Show all available commands
+make up    # Start Docker services
+make down  # Stop Docker services  
+make test  # Run all tests
+make clean # Clean up containers and files
 ```
-
-### Test Database Details
-
-- **Database**: SQLite (in-memory for tests)
-- **No external dependencies required**
-- **Fast test execution**
 
 ## API Documentation
 
 Once the application is running, you can access:
-- Interactive API docs: http://localhost:8000/docs
-- ReDoc documentation: http://localhost:8000/redoc
+- Interactive API docs: http://localhost:8080/docs
+- ReDoc documentation: http://localhost:8080/redoc
 
 ## Project Structure
 
 ```
-app/
-├── auth.py              # API key authentication
-├── core/
-│   └── errors.py        # Error handling
-├── db.py                # Database configuration
-├── main.py              # FastAPI application
-├── models/              # SQLAlchemy models
-├── repositories/        # Data access layer
-├── routers/             # API endpoints
-├── schemas/             # Pydantic schemas
-└── settings.py          # Configuration
+├── app/                 # Application code
+│   ├── auth.py          # API key authentication
+│   ├── db.py            # Database configuration
+│   ├── main.py          # FastAPI application
+│   ├── models/          # SQLAlchemy models
+│   ├── repositories/    # Data access layer
+│   ├── routers/         # API endpoints
+│   ├── schemas/         # Pydantic schemas
+│   ├── settings.py      # Configuration
+│   └── utils/           # Utility modules
+├── scripts/             # Utility scripts
+├── tests/               # Test suite
+├── Makefile             # Development commands
+└── docker-compose.yml   # Docker services
 ```
 
 ## Features
@@ -66,7 +92,26 @@ app/
 - Device profile CRUD operations
 - Template-based profile creation
 - API key authentication
-- ETag-based concurrency control
+- ETag-based concurrency control (prevents race conditions from multiple tabs/API retries)
 - Soft delete functionality
 - Pagination support
 - Multi-tenant data isolation
+
+## Technical Decisions
+
+- **Python 3.12**: My strongest language, quickest way to deliver.
+- **PostgreSQL**: Robust and reliable, proven under heavy workloads.
+- **FastAPI**: Lightweight micro-framework, minimal dependencies, built-in validation and docs.
+- **SQLAlchemy**: Standard ORM in Python, integrates cleanly with Postgres.
+- **Pydantic v2**: Great for validation and clear error messages out of the box.
+- **API Key Auth**: Simplest choice, matches the exercise requirements.
+- **Docker python:3.12-slim-bookworm**: Small, secure base image, fast builds. Considered Alpine for smaller size but chose Debian for better compatibility with Python packages.
+- **pytest**: I've used it for years; fixtures make tests easy to write and maintain.
+
+## Out of Scope
+
+- Template creation/updates via API (templates are managed through database seeding)
+- Automatic owner filtering using base repository pattern (ensures all queries are scoped to the authenticated user)
+- Complex template versioning system (version tracking, migration scripts, backward compatibility)
+- Advanced security hardening (CORS, rate limiting, security headers)
+- Production monitoring, logging, and observability

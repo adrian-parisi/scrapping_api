@@ -23,6 +23,7 @@ class CustomHeader(BaseModel):
     
     name: str = Field(..., min_length=1, max_length=100)
     value: str = Field(..., max_length=1000)
+    secret: bool = Field(default=False, description="Whether this header contains secret data that should be encrypted")
 
 
 class DeviceProfileBase(BaseModel):

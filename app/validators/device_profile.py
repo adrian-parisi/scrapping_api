@@ -48,16 +48,14 @@ def validate_custom_headers(headers: List) -> List:
         ValueError: If forbidden headers are found
     """
     # Forbidden headers that should not be set by clients
+    # TODO: Validate with ZenRows team if these forbidden headers make sense
     FORBIDDEN_HEADERS = {
-        # Hop-by-hop headers (RFC 2616)
+        # Hop-by-hop headers (RFC 2616) - these are meaningful only for a single transport-level connection
         'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization',
         'te', 'trailers', 'transfer-encoding', 'upgrade',
         
-        # Controlled headers (managed by HTTP implementation)
-        'host', 'content-length', 'content-encoding', 'content-range', 'content-type',
-        
-        # Additional security-sensitive headers
-        'authorization', 'cookie', 'set-cookie', 'www-authenticate'
+        # Controlled headers (managed by HTTP implementation) - these are controlled by the HTTP implementation
+        'host', 'content-length', 'content-encoding', 'content-range', 'content-type'
     }
     
     for header in headers:

@@ -20,5 +20,10 @@ docker-compose.test.yml
 # Dependencies
 poetry.lock
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
 # Editor/Tool specific
 .cursor/

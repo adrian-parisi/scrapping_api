@@ -18,10 +18,6 @@ class Settings(BaseSettings):
     # API Key
     api_key_pepper: str = Field(..., alias="API_KEY_PEPPER")
     
-    # Pagination
-    default_page_size: int = Field(default=25, alias="DEFAULT_PAGE_SIZE")
-    max_page_size: int = Field(default=100, alias="MAX_PAGE_SIZE")
-    
     # Request limits
     max_request_size: int = Field(default=1048576, alias="MAX_REQUEST_SIZE")  # 1MB
     

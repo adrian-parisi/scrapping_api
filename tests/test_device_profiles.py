@@ -31,7 +31,12 @@ class TestDeviceProfileCRUD:
         assert data["window_height"] == sample_device_profile_data["window_height"]
         assert data["user_agent"] == sample_device_profile_data["user_agent"]
         assert data["country"] == sample_device_profile_data["country"]
-        assert data["custom_headers"] == sample_device_profile_data["custom_headers"]
+        # Custom headers should have secret field added (defaults to False)
+        expected_headers = [
+            {**header, "secret": False} 
+            for header in sample_device_profile_data["custom_headers"]
+        ]
+        assert data["custom_headers"] == expected_headers
         assert data["extras"] == sample_device_profile_data["extras"]
         assert data["version"] == 1
         assert "created_at" in data
@@ -597,33 +602,34 @@ class TestDeviceProfileCRUD:
             header_errors = [err for err in error_data["errors"] if "custom_headers" in str(err.get("loc", []))]
             assert len(header_errors) > 0
         
-        # Test forbidden security headers
-        forbidden_security = [
+        # Test allowed headers
+        security_headers = [
             {"name": "Authorization", "value": "Bearer token"},
             {"name": "Cookie", "value": "session=abc123"},
             {"name": "Set-Cookie", "value": "session=abc123"},
             {"name": "WWW-Authenticate", "value": "Basic"},
         ]
         
-        for i, header in enumerate(forbidden_security):
-            profile_data = sample_device_profile_data.copy()
-            profile_data["custom_headers"] = [header]
-            profile_data["name"] = f"Forbidden Security {i}"
-            
-            response = client.post(
-                "/api/v1/device-profiles",
-                json=profile_data,
-                headers=authenticated_headers
-            )
-            
-            assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
-            error_data = response.json()
-            assert "errors" in error_data
-            assert isinstance(error_data["errors"], list)
-            assert len(error_data["errors"]) > 0
-            # Check that the error is related to custom headers validation
-            header_errors = [err for err in error_data["errors"] if "custom_headers" in str(err.get("loc", []))]
-            assert len(header_errors) > 0
+        profile_data = sample_device_profile_data.copy()
+        profile_data["custom_headers"] = security_headers
+        profile_data["name"] = "Security Headers Profile"
+        
+        response = client.post(
+            "/api/v1/device-profiles",
+            json=profile_data,
+            headers=authenticated_headers
+        )
+        
+        assert response.status_code == status.HTTP_201_CREATED
+        response_data = response.json()
+        assert len(response_data["custom_headers"]) == 4
+        
+        # Verify the security headers are preserved correctly
+        header_names = [h["name"] for h in response_data["custom_headers"]]
+        assert "Authorization" in header_names
+        assert "Cookie" in header_names
+        assert "Set-Cookie" in header_names
+        assert "WWW-Authenticate" in header_names
         
         # Test case sensitivity (should be case-insensitive)
         profile_data = sample_device_profile_data.copy()

@@ -11,6 +11,7 @@ from sqlalchemy import select
 from app.models.template import Template
 from app.schemas.device_profile import DeviceProfileCreateFromTemplate
 from app.schemas.template import CreateProfileFromTemplateRequest
+from app.utils.template_normalization import template_normalizer
 
 
 class TemplateRepository:
@@ -89,5 +90,8 @@ class TemplateRepository:
                     profile_data["custom_headers"] = value
             else:
                 profile_data[field] = value
+        
+        # Normalize template payload to comply with latest schema
+        profile_data = template_normalizer.normalize_payload(profile_data)
         
         return profile_data

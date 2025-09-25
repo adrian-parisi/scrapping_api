@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, Query
 
 from app.models.device_profile import DeviceProfile
 from app.schemas.device_profile import DeviceProfileCreate, DeviceProfileUpdate
+from app.utils.encryption import process_sensitive_headers
 
 
 class DeviceProfileRepository:
@@ -47,6 +48,10 @@ class DeviceProfileRepository:
         Returns:
             DeviceProfile: Created profile
         """
+        # Process custom headers to encrypt sensitive ones
+        headers_data = [header.model_dump() for header in profile_data.custom_headers]
+        encrypted_headers = process_sensitive_headers(headers_data, encrypt=True)
+        
         profile = DeviceProfile(
             owner_id=owner_id,
             name=profile_data.name,
@@ -55,7 +60,7 @@ class DeviceProfileRepository:
             window_height=profile_data.window_height,
             user_agent=profile_data.user_agent,
             country=profile_data.country,
-            custom_headers=[header.model_dump() for header in profile_data.custom_headers],
+            custom_headers=encrypted_headers,
             extras=profile_data.extras
         )
         
@@ -63,6 +68,21 @@ class DeviceProfileRepository:
         self.db.commit()
         self.db.refresh(profile)
         
+        return profile
+    
+    def _decrypt_profile_headers(self, profile: DeviceProfile) -> DeviceProfile:
+        """
+        Decrypt sensitive headers in a profile for API responses.
+        
+        Args:
+            profile: The profile with potentially encrypted headers
+            
+        Returns:
+            DeviceProfile: Profile with decrypted headers
+        """
+        if profile.custom_headers:
+            decrypted_headers = process_sensitive_headers(profile.custom_headers, encrypt=False)
+            profile.custom_headers = decrypted_headers
         return profile
     
     def get_by_id(self, owner_id: UUID, profile_id: UUID) -> Optional[DeviceProfile]:
@@ -85,7 +105,10 @@ class DeviceProfileRepository:
                 )
             )
         )
-        return result.scalar_one_or_none()
+        profile = result.scalar_one_or_none()
+        if profile:
+            return self._decrypt_profile_headers(profile)
+        return None
     
     def list(self, owner_id: UUID, limit: int, offset: int) -> tuple[List[DeviceProfile], int]:
         """
@@ -116,7 +139,10 @@ class DeviceProfileRepository:
         )
         profiles = profiles_result.scalars().all()
         
-        return list(profiles), total_count
+        # Decrypt sensitive headers for all profiles
+        decrypted_profiles = [self._decrypt_profile_headers(profile) for profile in profiles]
+        
+        return decrypted_profiles, total_count
     
     def update(self, owner_id: UUID, profile_id: UUID, update_data: DeviceProfileUpdate, version: int) -> Optional[DeviceProfile]:
         """
@@ -143,7 +169,10 @@ class DeviceProfileRepository:
         update_dict = update_data.model_dump(exclude_unset=True)
         for field, value in update_dict.items():
             if field == "custom_headers" and value is not None:
-                setattr(profile, field, [header.model_dump() for header in value])
+                # Process custom headers to encrypt sensitive ones
+                headers_data = [header.model_dump() for header in value]
+                encrypted_headers = process_sensitive_headers(headers_data, encrypt=True)
+                setattr(profile, field, encrypted_headers)
             else:
                 setattr(profile, field, value)
         
