@@ -11,6 +11,17 @@ A REST API for managing device profiles used in web scraping operations, built w
 - Docker & Docker Compose
 - PostgreSQL (or use Docker Compose for local development)
 
+## Tech Stack
+
+- **Python 3.12**: My strongest language, quickest way to deliver.
+- **PostgreSQL**: Robust and reliable, proven under heavy workloads.
+- **FastAPI**: Lightweight micro-framework, minimal dependencies, built-in validation and docs.
+- **SQLAlchemy**: Standard ORM in Python, integrates cleanly with Postgres.
+- **Pydantic v2**: Great for validation and clear error messages out of the box.
+- **API Key Auth**: Simplest choice, matches the exercise requirements.
+- **Docker python:3.12-slim-bookworm**: Small, secure base image, fast builds. Considered Alpine for smaller size but chose Debian for better compatibility with Python packages.
+- **pytest**: I've used it for years; fixtures make tests easy to write and maintain.
+
 ## Getting Started
 
 ### 1. Start the API Server
@@ -118,17 +129,6 @@ Once the application is running, you can access:
 - Soft delete functionality
 - Pagination support
 - Multi-tenant data isolation
-
-## Technical Decisions
-
-- **Python 3.12**: My strongest language, quickest way to deliver.
-- **PostgreSQL**: Robust and reliable, proven under heavy workloads.
-- **FastAPI**: Lightweight micro-framework, minimal dependencies, built-in validation and docs.
-- **SQLAlchemy**: Standard ORM in Python, integrates cleanly with Postgres.
-- **Pydantic v2**: Great for validation and clear error messages out of the box.
-- **API Key Auth**: Simplest choice, matches the exercise requirements.
-- **Docker python:3.12-slim-bookworm**: Small, secure base image, fast builds. Considered Alpine for smaller size but chose Debian for better compatibility with Python packages.
-- **pytest**: I've used it for years; fixtures make tests easy to write and maintain.
 
 ## Architecture Considerations
 
