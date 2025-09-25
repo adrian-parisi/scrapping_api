@@ -22,7 +22,7 @@ The API will be available at http://localhost:8080
 ### 2. Create a User and API Key
 ```bash
 # Copy the environment template
-cp env.example .env
+cp .env.example .env
 
 # Create user and API key (uses .env automatically)
 poetry run python scripts/create_user.py user@example.com
